@@ -12,6 +12,7 @@ Task file; the latest coder summary; the latest verdict; the latest QA report, i
 |---|---|
 | Supervisor CONDITIONAL | **Follow-up**, same round, same branch. The coder prompt lists only the conditions, each with the mutant that must die. The supervisor prompt re-checks only them. |
 | Supervisor FAIL, or QA FAIL | **New round**, same branch. |
+| QA PASS with known-debt reds | **Close the task.** Check each named TD and its evidence yourself (the code path is unchanged vs the merge-base). Append the reds to their TD rows as "seen again". Don't open a round for another task's defect. (Source project: a known webhook-ordering bug, owned by another task, failed a correct branch and nearly forced a fourth round.) |
 | Supervisor PASS | Generate the **QA prompt** now (`generate_qa_prompt.md`), from the PASS commit. |
 | QA RECIPE ERROR | **Not a round.** Fix the `.livetest.md`, record it in the history, and regenerate only the QA prompt. |
 | QA BLOCKED | **Not a round.** No prompt change; QA reruns once the environment is back. |

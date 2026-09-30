@@ -70,8 +70,8 @@ file, the task file or old QA reports. The prompt has what you need.
 ## Verdicts
 | Verdict | When |
 |---|---|
-| **PASS** | Every step and the negative direction hold, the full suite is green, and undo is proven. |
-| **FAIL** | A sound recipe step didn't hold, **or** the full suite shows a regression this branch caused. Name the step or test, expected vs observed, the failure layer (client, API, server, database, provider, test setup) and the evidence path. Never call a failure "environment" or "pre-existing" without evidence that it fails at the merge-base too. |
+| **PASS** | Every recipe step and the negative direction hold; undo proven; the full suite is green, **or** every red in it is **known debt**: a test in code this branch didn't change, failing by a mechanism already registered in `docs/tech-debt.md` and owned by another task. Name each such red with its TD id and the evidence it isn't this branch's (merge-base run, or `git diff <merge-base> -- <file>` showing the code path unchanged). A red you can't tie to a TD this way is a FAIL. |
+| **FAIL** | A sound recipe step didn't hold, **or** the full suite shows a red that isn't known debt (see PASS), including any regression this branch caused. Name the step or test, expected vs observed, the failure layer (client, API, server, database, provider, test setup) and the evidence path. Never call a failure "environment" or "pre-existing" without evidence that it fails at the merge-base too. |
 | **RECIPE ERROR** | The recipe can't pass for a correct implementation, or depends on luck. Not a round: the Orchestrator fixes it. |
 | **BLOCKED** | The environment is unavailable (preflight BLOCKED, or a provider outage in a step that doesn't test provider failure). Not a round. |
 
