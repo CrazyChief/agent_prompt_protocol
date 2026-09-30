@@ -126,3 +126,7 @@ enforce the same limits by other means:
 # Contribution
 
 You're wellcome to open PR
+
+# LICENSE
+
+Agent Prompt Protocol is licensed under Apache-2.0. See [LICENSE](LICENSE) for the full license text.
