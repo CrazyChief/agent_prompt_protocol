@@ -1,0 +1,50 @@
+{
+  "$comment": "Read by scripts/agent/*.mjs. Every command runs through the shell from the repo root. {report} is replaced with a temp JUnit XML path, {pattern} with the test file(s) passed to `gate.mjs <file>`, {filter} with the args passed to `e2e.mjs <filter>`. Edit the commands for your stack; the defaults below are a TypeScript/Vitest/Playwright example.",
+
+  "mainBranch": "main",
+
+  "gate": {
+    "checks": [
+      { "name": "typecheck", "cmd": "npx tsc --noEmit" },
+      { "name": "lint", "cmd": "npx eslint ." }
+    ],
+    "test": {
+      "cmd": "npx vitest run --reporter=junit --outputFile={report}",
+      "scopedCmd": "npx vitest run {pattern} --reporter=junit --outputFile={report}"
+    },
+    "knownFailures": "tests/known-failures.json"
+  },
+
+  "e2e": {
+    "cmd": "npx playwright test --reporter=junit",
+    "scopedCmd": "npx playwright test {filter} --reporter=junit",
+    "reportEnv": "PLAYWRIGHT_JUNIT_OUTPUT_NAME",
+    "probes": [
+      { "name": "app", "url": "http://localhost:3000" },
+      { "name": "database", "tcp": "127.0.0.1:5432" }
+    ]
+  },
+
+  "qa": {
+    "baseUrl": "http://localhost:3000",
+    "envFile": ".env"
+  },
+
+  "reviewPack": {
+    "diffCap": 4000,
+    "diffExclude": ["package-lock.json", "*.lock", "pnpm-lock.yaml", "go.sum"],
+    "ruleChecks": [
+      { "id": "H3", "label": "existing migration modified/renamed/deleted", "changedPathRegex": "^db/migrations/", "ignoreAdded": true },
+      { "id": "H3", "label": "destructive data command introduced", "addedLineRegex": "db\\s+reset|db:drop|DROP\\s+DATABASE" },
+      { "id": "H6", "label": "historical record lost lines", "shrunkPathRegex": "^docs/tasks/.+\\.history\\.md$" },
+      { "id": "H8", "label": "secret-shaped literal introduced", "addedLineRegex": "(sk_live_|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY)" },
+      { "id": "H8", "label": "response/log paths touched: read them for sensitive-data exposure", "changedPathRegex": "^src/(api|handlers)/" }
+    ],
+    "routes": {
+      "$comment": "Optional. Maps changed page files to routes and greps the e2e dir for specs naming them. Delete this block if your project has no pages.",
+      "pageRegex": "^src/pages/.+\\.(vue|tsx|jsx|svelte)$",
+      "stripPrefix": "src/pages",
+      "e2eDir": "tests/e2e"
+    }
+  }
+}

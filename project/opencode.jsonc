@@ -1,0 +1,102 @@
+{
+  // The three protocol agents. Launch with:
+  //
+  //   scripts/agent/opencode.sh coder|supervisor|qa
+  //
+  // The launcher swaps the global config home for .opencode/home (an empty config) for that process
+  // only, so global plugins and MCP servers don't inject instructions that push tool calls. A project
+  // `"plugin": []` can't remove them (OpenCode concatenates config arrays), and `--pure` would also
+  // drop .opencode/plugins/loop-guard.ts.
+  //
+  // Why this file exists: these agents are billed per REQUEST, and one tool call is one request.
+  // In the source project: ~600 requests per task, 41–48 % of every role's calls spent reading and
+  // searching. Everything below either removes a request or bounds the worst case.
+  "$schema": "https://opencode.ai/config.json",
+
+  // Optional: session titles come from the small model. Point it at a local or cheap model so titles
+  // stay off the per-request quota. Providers must be defined here: the lean config home does not
+  // carry your global ones.
+  // "small_model": "{{LOCAL_PROVIDER}}/{{SMALL_MODEL}}",
+  // "provider": { … },
+
+  "agent": {
+    "coder": {
+      "description": "Coding agent: implements one task file with TDD on a feature branch",
+      "mode": "primary",
+      "model": "{{CODER_MODEL}}",
+      "prompt": "{file:./docs/agent_prompt_protocol/coding_agent/role_and_goals.md}",
+      // A guardrail, not a target (target ≈ 100). At the cap OpenCode forces a final answer, and the
+      // coder writes the summary with what is done. Raise it for large refactors.
+      "steps": 150,
+      "tools": {
+        // Each of these was a billed request with no product value in this role. Add the tool
+        // names your global setup injects (MCP servers are named `<server>*`).
+        "todowrite": false,       // 242 calls in 25 coder sessions in the source project
+        "task": false,            // sub-agents are whole extra sessions
+        "skill": false,
+        "webfetch": false
+      },
+      "permission": {
+        "bash": {
+          "*": "allow",
+          // Hard rules and the dirty-tree rule, enforced instead of re-read every session.
+          "*git push*": "deny", "*git merge*": "deny", "*git rebase*": "deny",
+          "*git stash*": "deny", "*git clean*": "deny", "*git restore*": "deny",
+          "*git reset --hard*": "deny", "*git checkout -- *": "deny", "*git checkout .*": "deny"
+          // , "*{{DESTRUCTIVE_DATA_COMMAND}}*": "deny", "*{{BANNED_MODEL}}*": "deny"
+        }
+      }
+    },
+
+    "supervisor": {
+      "description": "Supervisor: reviews one branch against its task file and writes a verdict",
+      "mode": "primary",
+      "model": "{{SUPERVISOR_MODEL}}",
+      "prompt": "{file:./docs/agent_prompt_protocol/supervisor_agent/role_and_goals.md}",
+      // Target ≈ 12.
+      "steps": 40,
+      "tools": { "todowrite": false, "task": false, "skill": false, "webfetch": false },
+      "permission": {
+        // It reviews; it doesn't fix. Mutants go through scripts/agent/mutants.mjs, which restores itself.
+        "edit": {
+          "*": "deny",
+          "docs/agent_prompt_protocol/supervisor_agent/verdicts/*": "allow"
+        },
+        "bash": {
+          "*": "allow",
+          "*git commit*": "deny", "*git add*": "deny", "*git push*": "deny", "*git merge*": "deny",
+          "*git rebase*": "deny", "*git stash*": "deny", "*git clean*": "deny", "*git restore*": "deny",
+          "*git reset --hard*": "deny", "*git checkout -- *": "deny", "*git checkout .*": "deny"
+        }
+      }
+    },
+
+    "qa": {
+      "description": "QA agent: runs one task's live test as an automated e2e spec and reports",
+      "mode": "primary",
+      "model": "{{QA_MODEL}}",
+      "prompt": "{file:./docs/agent_prompt_protocol/qa_agent/role_and_goals.md}",
+      // Target ≈ 30.
+      "steps": 80,
+      "tools": {
+        "todowrite": false, "task": false, "skill": false, "webfetch": false
+        // Deny any browser MCP here (e.g. "playwright*": false): in the source project a browser MCP
+        // cost 1,257 calls over 24 QA sessions. The spec drives the browser; its traces are the diagnosis.
+      },
+      "permission": {
+        // The e2e spec, its shared helpers and the report are the only things QA writes.
+        "edit": {
+          "*": "deny",
+          "{{E2E_DIR}}*": "allow",
+          "docs/agent_prompt_protocol/qa_agent/reports/*": "allow"
+        },
+        "bash": {
+          "*": "allow",
+          "*git push*": "deny", "*git merge*": "deny", "*git rebase*": "deny", "*git stash*": "deny",
+          "*git clean*": "deny", "*git restore*": "deny", "*git reset --hard*": "deny",
+          "*git checkout -- *": "deny", "*git checkout .*": "deny"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+
+# Agent prompt protocol — per-run artefacts (never committed)
+docs/agent_prompt_protocol/orchestrator/generated/
+docs/agent_prompt_protocol/coding_agent/summaries/
+docs/agent_prompt_protocol/supervisor_agent/verdicts/
+docs/agent_prompt_protocol/qa_agent/reports/
+# OpenCode lean config home (scripts/agent/opencode.sh): only its opencode.json is tracked
+.opencode/home/opencode/*
+!.opencode/home/opencode/opencode.json
