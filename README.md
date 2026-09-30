@@ -123,6 +123,12 @@ enforce the same limits by other means:
 
 `opencode.jsonc` documents each limit and why it exists.
 
+# Donations
+
+> Suggested to donate? Please include your github, so we will be able to showcase you here! Thanks!
+
+<a href="https://www.buymeacoffee.com/crazychiefv" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
 # Contribution
 
 You're wellcome to open PR
